@@ -1,7 +1,14 @@
+import { withDevtools } from '@angular-architects/ngrx-toolkit';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { mapResponse, tapResponse } from '@ngrx/operators';
 import {
   patchState,
+  signalMethod,
   signalStore,
   withComputed,
+  withHooks,
   withMethods,
   withState,
 } from '@ngrx/signals';
@@ -10,17 +17,14 @@ import {
   setAllEntities,
   withEntities,
 } from '@ngrx/signals/entities';
-import { Customer } from '../model/customer';
-import { computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Dispatcher } from '@ngrx/signals/events';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { EMPTY, pipe } from 'rxjs';
 import { concatMap, switchMap, tap } from 'rxjs/operators';
 import { Configuration } from '../../../shared/config/configuration';
-import { mapResponse, tapResponse } from '@ngrx/operators';
-import { EMPTY, pipe } from 'rxjs';
-import { Router } from '@angular/router';
+import { customerChanged } from '../../../shared/events/global-events';
 import { MessageService } from '../../../shared/ui-messaging/message/message.service';
-import { withDevtools } from '@angular-architects/ngrx-toolkit';
+import { Customer } from '../model/customer';
 
 export const CustomerStore = signalStore(
   { providedIn: 'root' },
@@ -131,5 +135,16 @@ export const CustomerStore = signalStore(
       pageIndex: state.page(),
       length: state.total(),
     })),
+  })),
+  withHooks((store) => ({
+    onInit() {
+      const dispatcher = inject(Dispatcher);
+      signalMethod<number | undefined>((id) => {
+        if (id === undefined) {
+          return;
+        }
+        dispatcher.dispatch(customerChanged({ id }));
+      })(store.selectedId);
+    },
   })),
 );

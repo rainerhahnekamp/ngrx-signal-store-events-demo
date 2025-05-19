@@ -1,11 +1,10 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterOutlet } from '@angular/router';
 import { FooterComponent } from './core/footer.component';
 import { HeaderComponent } from './core/header/header.component';
 import { SidemenuComponent } from './core/sidemenu/sidemenu.component';
-import { HolidayStore } from './domains/holidays/data/holidays-store';
 import { TrackerStore } from './shared/tracker/tracker-store';
 import { LoaderComponent } from './shared/ui-messaging/loader/loader.component';
 import { MessageComponent } from './shared/ui-messaging/message/message.component';
@@ -44,18 +43,4 @@ import { MessageComponent } from './shared/ui-messaging/message/message.componen
 })
 export class AppComponent {
   readonly #trackerStore = inject(TrackerStore);
-  readonly #holidaysStore = inject(HolidayStore);
-
-  constructor() {
-    const favouriteLog = computed(() => {
-      const favouriteIds = this.#holidaysStore.favouriteIds();
-
-      return {
-        message: `favouriteIds: ${favouriteIds.join(', ')}`,
-        type: 'info',
-      };
-    });
-
-    this.#trackerStore.log(favouriteLog);
-  }
 }

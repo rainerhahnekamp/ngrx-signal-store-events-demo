@@ -1,12 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
-import { MatButton } from '@angular/material/button';
-import { HolidayCardComponent } from '../ui/holiday-card/holiday-card.component';
+import { injectDispatch } from '@ngrx/signals/events';
+import { holidayEvents } from '../data/holiday-events';
 import { HolidayStore } from '../data/holidays-store';
+import { HolidayCardComponent } from '../ui/holiday-card/holiday-card.component';
 
 @Component({
   selector: 'app-holidays',
@@ -37,6 +39,11 @@ import { HolidayStore } from '../data/holidays-store';
         <button color="primary" mat-raised-button>Search</button>
       </div>
     </form>
+
+    <button (click)="removeAllFavourites()" mat-raised-button>
+      Remove All Favourites
+    </button>
+
     <div class="flex flex-wrap justify-evenly">
       @for (holiday of holidays(); track holiday.id) {
         <app-holiday-card
@@ -60,25 +67,32 @@ import { HolidayStore } from '../data/holidays-store';
   ],
 })
 export class HolidaysComponent implements OnInit {
-  #holidaysStore = inject(HolidayStore);
+  readonly #holidaysStore = inject(HolidayStore);
+  readonly #events = injectDispatch(holidayEvents);
 
   protected holidays = this.#holidaysStore.holidaysWithFavourite;
   protected search = '';
   protected type = '0';
 
   ngOnInit(): void {
-    this.#holidaysStore.load();
+    this.#events.load();
   }
 
   addFavourite(id: number) {
-    this.#holidaysStore.addFavourite(id);
+    this.#events.addFavourite(id);
   }
 
   removeFavourite(id: number) {
-    this.#holidaysStore.removeFavourite(id);
+    this.#events.removeFavourite(id);
   }
 
   handleSearch() {
-    this.#holidaysStore.search(this.search, Number(this.type));
+    this.#events.search({ query: this.search, type: Number(this.type) });
+  }
+
+  removeAllFavourites() {
+    this.holidays()
+      .filter((holiday) => holiday.isFavourite)
+      .forEach((holiday) => this.#events.removeFavourite(holiday.id));
   }
 }

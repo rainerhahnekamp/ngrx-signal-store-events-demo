@@ -1,3 +1,4 @@
+import { inject } from '@angular/core';
 import {
   patchState,
   signalMethod,
@@ -6,6 +7,9 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
+import { Events, withEffects } from '@ngrx/signals/events';
+import { tap } from 'rxjs';
+import { log } from '../events/global-events';
 
 export type Log = {
   id: number;
@@ -35,6 +39,13 @@ export const TrackerStore = signalStore(
       },
     ),
   })),
+  withEffects((store) => {
+    const events = inject(Events);
+
+    return {
+      log$: events.on(log).pipe(tap((event) => store.log(event.payload))),
+    };
+  }),
   withHooks((store) => ({
     onInit: () =>
       store.log({ message: 'TrackerStore initialized', type: 'info' }),
